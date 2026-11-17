@@ -1,0 +1,31 @@
+name: Configure kubectl for Oracle Kubernetes Engine
+description: Install kubectl and configure access to an Oracle Kubernetes Engine cluster
+branding:
+  icon: cloud
+  color: orange
+inputs:
+  cluster:
+    description: OCID of the OKE cluster
+    required: true
+  enablePrivateEndpoint:
+    description: Use the private Kubernetes API endpoint
+    required: false
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+        working-directory: ${{ github.action_path }}
+        cache-dependency-glob: action.yml
+    - shell: bash
+      run: |
+        uv tool install oci-cli==3.96.2
+        echo "$(uv tool dir --bin)" >> "$GITHUB_PATH"
+    - uses: azure/setup-kubectl@v4
+    - shell: bash
+      env:
+        INPUT_CLUSTER: ${{ inputs.cluster }}
+        INPUT_PRIVATE_ENDPOINT: ${{ inputs.enablePrivateEndpoint }}
+      run: python3 "$GITHUB_ACTION_PATH/oke.py"
